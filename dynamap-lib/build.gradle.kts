@@ -3,6 +3,7 @@ val dynamoDbVersion: String = "1.0.69"
 
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
 
     id("maven-publish")
 
@@ -21,7 +22,16 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationCoreVersion")
     implementation("aws.sdk.kotlin:dynamodb:$dynamoDbVersion")
+    testImplementation(kotlin("test-junit5"))
 }
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 
 publishing {
     repositories {

@@ -30,6 +30,12 @@ internal class DynamoMapCompositeDecoder(
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
         if (currentIndex >= keys.size || currentIndex >= descriptor.elementsCount) return CompositeDecoder.DECODE_DONE
 
+        val element = `object`[propertyAtIndex(descriptor, currentIndex)]
+        if (element == null && descriptor.isElementOptional(currentIndex)) {
+            currentIndex += 1
+            return currentIndex // skip this element
+        }
+
         // if (currentIndex >= descriptor.elementsCount) return CompositeDecoder.UNKNOWN_NAME
         //
         // try { descriptor.getElementName(currentIndex) } catch (throwable: Throwable) { return CompositeDecoder.UNKNOWN_NAME }
