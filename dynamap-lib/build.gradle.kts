@@ -6,6 +6,7 @@ plugins {
     kotlin("plugin.serialization")
 
     id("maven-publish")
+    id("tech.yanand.maven-central-publish") version "1.3.0"
 
     signing
 }
@@ -34,17 +35,11 @@ tasks.named<Test>("test") {
 
 
 publishing {
-    repositories {
-        maven {
-            url = uri(layout.buildDirectory.dir("CiRepo"))
-        }
-    }
-
     publications {
-        create<MavenPublication>("mavenJava") {
+        create<MavenPublication>("MavenJava") {
             groupId = "com.codanbaru.kotlin"
             artifactId = "dynamap"
-            version = "0.8.0"
+            version = project.findProperty("lib.version") as String? ?: "0"
 
             from(components["java"])
 
@@ -79,5 +74,13 @@ publishing {
 }
 
 signing {
-    sign(publishing.publications["mavenJava"])
+    sign(publishing.publications["MavenJava"])
+}
+
+mavenCentral {
+    authToken = project.findProperty("sonartype.central.token") as String? ?: ""
+
+    publishingType = "USER_MANAGED"
+
+    maxWait = 120
 }
