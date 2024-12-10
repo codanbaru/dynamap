@@ -26,17 +26,20 @@ internal class DynamoMapCompositeDecoder(
     }
 
     private var currentIndex = 0
-    private val keys = `object`.keys.sorted()
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
-        if (currentIndex >= keys.size || currentIndex >= descriptor.elementsCount) return CompositeDecoder.DECODE_DONE
-
-        // if (currentIndex >= descriptor.elementsCount) return CompositeDecoder.UNKNOWN_NAME
-        //
-        // try { descriptor.getElementName(currentIndex) } catch (throwable: Throwable) { return CompositeDecoder.UNKNOWN_NAME }
+        if (currentIndex >= descriptor.elementsCount) return CompositeDecoder.DECODE_DONE
 
         val currentIndex = this.currentIndex
         this.currentIndex += 1
-        return currentIndex
+
+        // Check if the element we try to decode is present,
+        // is element is not present, try to decode next element index.
+        val element = try { elementAtIndex(descriptor, currentIndex) } catch (throwable: Throwable) { null }
+        if (element == null) {
+            return decodeElementIndex(descriptor)
+        } else {
+            return currentIndex
+        }
     }
 
     private fun annotationsAtIndex(descriptor: SerialDescriptor, index: Int): List<Annotation> =
@@ -53,7 +56,9 @@ internal class DynamoMapCompositeDecoder(
 
         var element = `object`[propertyName]
         if (element == null && configuration.evaluateUndefinedAttributesAsNullAttribute) {
-            element = AttributeValue.Null(true)
+            if (!descriptor.isElementOptional(index)) {
+                element = AttributeValue.Null(true)
+            }
         }
 
         return element ?: throw DynamapSerializationException.UnexpectedUndefined(property.subproperty(propertyName))
